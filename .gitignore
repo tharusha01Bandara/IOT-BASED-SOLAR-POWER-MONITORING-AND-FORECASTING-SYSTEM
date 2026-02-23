@@ -1,0 +1,80 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.venv
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# ML Models (if large)
+*.pkl
+*.h5
+*.model
+Backend/app/ml_models/*.pkl
+Backend/app/ml_models/*.joblib
+
+# Logs
+*.log
+logs/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Node modules (for future frontend)
+Frontend/node_modules/
+Frontend/dist/
+Frontend/build/
+Frontend/.next/
+Frontend/.nuxt/
+Frontend/out/
+Frontend/.cache/
+
+# Package files
+Frontend/package-lock.json
+Frontend/yarn.lock
+Frontend/pnpm-lock.yaml

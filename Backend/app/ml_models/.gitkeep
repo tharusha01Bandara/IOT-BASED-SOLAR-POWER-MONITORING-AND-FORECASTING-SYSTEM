@@ -1,0 +1,28 @@
+# ML Models Directory
+
+This directory stores trained machine learning models for power prediction.
+
+## Contents
+
+- `{device_id}_model.pkl` - Serialized scikit-learn model
+- `{device_id}_model_meta.json` - Model metadata (metrics, features, training info)
+
+## Notes
+
+- Models are device-specific (one model per device)
+- Models are automatically created by the training endpoint: `POST /api/ml/train`
+- Models are gitignored to avoid committing large binary files
+- For production, consider using cloud storage (S3, GCS) for model persistence
+
+## Model Lifecycle
+
+1. **Training**: `POST /api/ml/train` creates new model files
+2. **Loading**: Models are loaded on-demand for predictions
+3. **Retraining**: Overwrites existing model files
+4. **Deletion**: `DELETE /api/ml/model` removes files
+
+## File Sizes
+
+Typical file sizes:
+- `model.pkl`: 100KB - 10MB (depending on model complexity and data size)
+- `model_meta.json`: 1-5KB (JSON metadata)

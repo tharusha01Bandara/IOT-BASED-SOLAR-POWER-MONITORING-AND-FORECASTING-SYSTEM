@@ -1,4 +1,4 @@
-# Solar Tracker System
+# IOT-BASED-SOLAR-POWER-MONITORING-AND-FORECASTING-SYSTEM
 
 A comprehensive solar panel monitoring and prediction system with ML-powered analytics.
 

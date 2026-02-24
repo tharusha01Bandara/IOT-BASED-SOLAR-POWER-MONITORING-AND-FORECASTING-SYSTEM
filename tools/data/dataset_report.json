@@ -1,0 +1,42 @@
+{
+  "rows_fetched": 2016,
+  "rows_after_cleaning": 2000,
+  "rows_after_labeling": 1981,
+  "rows_dropped_status": 16,
+  "rows_dropped_duplicates": 0,
+  "rows_dropped_invalid_ranges": 0,
+  "rows_dropped_no_label": 19,
+  "timestamp_min": "2026-02-23T20:31:44.024000+05:30",
+  "timestamp_max": "2026-03-02T20:11:44.024000+05:30",
+  "missing_values": {},
+  "power_stats": {
+    "mean": 2.542,
+    "std": 4.412,
+    "min": 0.0,
+    "max": 15.95,
+    "median": 0.0
+  },
+  "lux_stats": {
+    "mean": 25192.519,
+    "std": 34982.093,
+    "min": 0.0,
+    "max": 110890.0,
+    "median": 0.0
+  },
+  "temperature_stats": {
+    "mean": 30.728,
+    "std": 4.207,
+    "min": 25.9,
+    "max": 42.2,
+    "median": 28.4
+  },
+  "label_match_failures": 19,
+  "total_timespan_hours": 167.67,
+  "generated_at": "2026-02-24T02:34:53.297937+05:30",
+  "config": {
+    "device_id": "tracker01",
+    "days": 7,
+    "horizon_minutes": 15,
+    "tolerance_seconds": 30
+  }
+}

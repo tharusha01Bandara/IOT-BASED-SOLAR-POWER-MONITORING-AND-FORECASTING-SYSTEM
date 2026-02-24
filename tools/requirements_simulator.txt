@@ -1,0 +1,11 @@
+# Requirements for Sri Lanka Solar Tracker Simulator
+# Python 3.11+
+
+# Essential (required)
+requests>=2.31.0
+
+# Optional but recommended
+pytz>=2024.1  # For accurate timezone support (Asia/Colombo)
+
+# For enhanced retry logic (included in requests, but explicit)
+urllib3>=2.0.0

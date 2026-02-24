@@ -42,9 +42,10 @@ class MLService:
     METADATA_FILE = "model_meta.json"
     
     # Feature configuration
-    BASE_FEATURES = ["servo_angle", "temperature", "humidity", "lux", "voltage", "current"]
+    BASE_FEATURES = ["servo_angle", "temperature", "humidity", "lux", "voltage", "current", "power"]
     TIME_FEATURES = ["hour", "minute", "day_of_week"]
-    TREND_FEATURES = ["power_diff", "lux_diff", "rolling_mean_power"]
+    TREND_FEATURES = ["power_diff", "lux_diff", "rolling_mean_power_5", "rolling_mean_lux_5"]
+    BINARY_FEATURES = ["fan_on"]
     
     def __init__(self, collection: Collection):
         """
@@ -134,7 +135,11 @@ class MLService:
             # Trend features
             df['power_diff'] = df['power'].diff().fillna(0)
             df['lux_diff'] = df['lux'].diff().fillna(0)
-            df['rolling_mean_power'] = df['power'].rolling(window=5, min_periods=1).mean()
+            df['rolling_mean_power_5'] = df['power'].rolling(window=5, min_periods=1).mean()
+            df['rolling_mean_lux_5'] = df['lux'].rolling(window=5, min_periods=1).mean()
+            
+            # Binary features
+            df['fan_on'] = (df.get('fan_status', 0) == 1).astype(int) if 'fan_status' in df.columns else 0
             
             logger.info(f"Engineered features: time={len(self.TIME_FEATURES)}, trend={len(self.TREND_FEATURES)}")
             
@@ -205,7 +210,7 @@ class MLService:
                 raise ValueError("No valid samples after creating supervised dataset")
             
             # Select features
-            feature_cols = self.BASE_FEATURES + self.TIME_FEATURES + self.TREND_FEATURES
+            feature_cols = self.BASE_FEATURES + self.TIME_FEATURES + self.TREND_FEATURES + self.BINARY_FEATURES
             available_features = [f for f in feature_cols if f in df_clean.columns]
             
             X = df_clean[available_features]
@@ -352,8 +357,19 @@ class MLService:
             True if model loaded successfully, False otherwise
         """
         try:
+            # Try device-specific model first
             model_path = self.MODEL_DIR / f"{device_id}_{self.MODEL_FILE}"
             metadata_path = self.MODEL_DIR / f"{device_id}_{self.METADATA_FILE}"
+            
+            # If not found, try to find latest model from train_model.py
+            if not model_path.exists():
+                latest_json = self.MODEL_DIR / "latest_randomforest.json"
+                if latest_json.exists():
+                    with open(latest_json, 'r') as f:
+                        latest = json.load(f)
+                    model_path = self.MODEL_DIR / latest['model_file']
+                    metadata_path = self.MODEL_DIR / latest['metadata_file']
+                    logger.info(f"Using latest trained model: {latest['model_file']}")
             
             if not model_path.exists():
                 logger.warning(f"Model file not found: {model_path}")
@@ -409,10 +425,14 @@ class MLService:
             features['minute'] = timestamp.minute
             features['day_of_week'] = timestamp.weekday()
             
-            # Trend features (use 0 for single prediction)
+            # Trend features (use current values for single prediction)
             features['power_diff'] = 0.0
             features['lux_diff'] = 0.0
-            features['rolling_mean_power'] = reading.get('power', 0.0)
+            features['rolling_mean_power_5'] = reading.get('power', 0.0)
+            features['rolling_mean_lux_5'] = reading.get('lux', 0.0)
+            
+            # Binary features
+            features['fan_on'] = 1.0 if reading.get('fan_status') == 'on' else 0.0
             
             # Create DataFrame
             df = pd.DataFrame([features])
@@ -505,6 +525,16 @@ class MLService:
             model_path = self.MODEL_DIR / f"{device_id}_{self.MODEL_FILE}"
             metadata_path = self.MODEL_DIR / f"{device_id}_{self.METADATA_FILE}"
             
+            # If device-specific model not found, check for latest model
+            if not model_path.exists():
+                latest_json = self.MODEL_DIR / "latest_randomforest.json"
+                if latest_json.exists():
+                    with open(latest_json, 'r') as f:
+                        latest = json.load(f)
+                    model_path = self.MODEL_DIR / latest['model_file']
+                    metadata_path = self.MODEL_DIR / latest['metadata_file']
+                    logger.info(f"Using latest trained model for status: {latest['model_file']}")
+            
             if not model_path.exists():
                 return {
                     "model_exists": False,
@@ -520,12 +550,12 @@ class MLService:
             
             return {
                 "model_exists": True,
-                "device_id": metadata.get('device_id'),
+                "device_id": metadata.get('device_id', device_id),
                 "model_type": metadata.get('model_type'),
                 "features": metadata.get('features'),
                 "metrics": metadata.get('metrics'),
                 "trained_at": metadata.get('trained_at'),
-                "model_version": metadata.get('model_version'),
+                "model_version": metadata.get('model_version', metadata.get('version')),
                 "samples_trained": metadata.get('samples_trained')
             }
             

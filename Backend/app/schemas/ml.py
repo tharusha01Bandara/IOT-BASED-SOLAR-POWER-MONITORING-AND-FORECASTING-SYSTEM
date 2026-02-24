@@ -161,7 +161,7 @@ class MLStatusResponse(BaseModel):
     device_id: Optional[str] = Field(None, description="Device ID model is trained for")
     model_type: Optional[str] = Field(None, description="Type of model")
     features: Optional[List[str]] = Field(None, description="Features used in model")
-    metrics: Optional[Dict[str, float]] = Field(None, description="Model performance metrics")
+    metrics: Optional[Dict[str, Any]] = Field(None, description="Model performance metrics (train/test)")
     trained_at: Optional[datetime] = Field(None, description="Last training timestamp")
     model_version: Optional[str] = Field(None, description="Model version")
     samples_trained: Optional[int] = Field(None, description="Number of samples used in training")
@@ -174,9 +174,8 @@ class MLStatusResponse(BaseModel):
                 "model_type": "random_forest",
                 "features": ["servo_angle", "temperature", "humidity", "lux", "hour", "minute"],
                 "metrics": {
-                    "mae": 2.34,
-                    "rmse": 3.45,
-                    "r2_score": 0.92
+                    "train": {"mae": 2.34, "rmse": 3.45, "r2": 0.92},
+                    "test": {"mae": 2.56, "rmse": 3.72, "r2": 0.90}
                 },
                 "trained_at": "2026-02-23T16:00:00Z",
                 "model_version": "1708704000",

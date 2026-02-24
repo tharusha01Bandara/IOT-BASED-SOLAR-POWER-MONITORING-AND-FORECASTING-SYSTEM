@@ -1,0 +1,17 @@
+# Dataset Builder Dependencies
+# Install with: pip install -r requirements_dataset.txt
+
+# Core dependencies
+pandas>=2.0.0
+numpy>=1.24.0
+pymongo>=4.6.0
+
+# Optional but recommended
+python-dotenv>=1.0.0  # For .env file support
+pytz>=2024.1          # For proper timezone handling
+pyarrow>=14.0.0       # For Parquet export (optional)
+
+# Already installed in main project
+# (listed here for standalone tool usage)
+# pydantic>=2.5.0
+# motor>=3.3.0

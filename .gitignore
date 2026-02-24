@@ -45,6 +45,13 @@ env/
 *.model
 Backend/app/ml_models/*.pkl
 Backend/app/ml_models/*.joblib
+models/
+!Backend/app/ml_models/.gitkeep
+
+# Training data
+data/*.csv
+data/*.parquet
+!data/.gitkeep
 
 # Logs
 *.log

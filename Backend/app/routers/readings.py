@@ -85,10 +85,10 @@ async def create_reading(
     service: Annotated[ReadingsService, Depends(get_readings_service)],
     ml_service: Annotated[MLService, Depends(get_ml_service)],
     predictions_collection: Annotated[Collection, Depends(get_predictions_collection)],
-    predict: Annotated[bool, Query(
-        description="Automatically make 15-min power prediction after storing reading",
-        example=True
-    )] = False
+    predict: bool = Query(
+        default=False,
+        description="Automatically make 15-min power prediction after storing reading"
+    )
 ) -> ReadingSuccessResponse:
     """
     Store a new sensor reading from IoT device.
@@ -209,13 +209,13 @@ async def create_reading(
     description="Retrieve the most recent sensor reading for a device"
 )
 async def get_latest_reading(
-    device_id: Annotated[str, Query(
+    service: Annotated[ReadingsService, Depends(get_readings_service)],
+    device_id: str = Query(
         description="Device identifier",
         min_length=1,
         max_length=50,
         example="tracker01"
-    )],
-    service: Annotated[ReadingsService, Depends(get_readings_service)]
+    )
 ) -> ReadingResponse:
     """
     Get the latest sensor reading for a specific device.
@@ -277,20 +277,21 @@ async def get_latest_reading(
     description="Retrieve historical readings within a time range"
 )
 async def get_reading_history(
-    device_id: Annotated[str, Query(
+    service: Annotated[ReadingsService, Depends(get_readings_service)],
+    settings: Annotated[Settings, Depends(get_settings)],
+    device_id: str = Query(
         description="Device identifier",
         min_length=1,
         max_length=50,
         example="tracker01"
-    )],
-    service: Annotated[ReadingsService, Depends(get_readings_service)],
-    settings: Annotated[Settings, Depends(get_settings)],
-    minutes: Annotated[int, Query(
+    ),
+    minutes: int = Query(
+        default=60,
         description="Time window in minutes to look back",
         ge=1,
         le=10080,
         example=60
-    )] = 60
+    )
 ) -> List[ReadingResponse]:
     """
     Get historical sensor readings within a time window.
@@ -348,17 +349,18 @@ async def get_reading_history(
     description="Calculate statistics for a device over a time period"
 )
 async def get_device_statistics(
-    device_id: Annotated[str, Query(
+    service: Annotated[ReadingsService, Depends(get_readings_service)],
+    device_id: str = Query(
         description="Device identifier",
         example="tracker01"
-    )],
-    service: Annotated[ReadingsService, Depends(get_readings_service)],
-    minutes: Annotated[int, Query(
+    ),
+    minutes: int = Query(
+        default=60,
         description="Time window in minutes",
         ge=1,
         le=10080,
         example=60
-    )] = 60
+    )
 ):
     """
     Get aggregated statistics for a device.

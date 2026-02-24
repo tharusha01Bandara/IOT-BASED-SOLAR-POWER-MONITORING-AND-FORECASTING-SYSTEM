@@ -348,7 +348,12 @@ class MLService:
     
     def load_model(self, device_id: str) -> bool:
         """
-        Load trained model from disk.
+        Load trained model from disk using current model pointer.
+        
+        Fallback order:
+        1. Current model pointer (app/ml_models/current_model.json)
+        2. Device-specific model (device_id_model.pkl)
+        3. Latest trained model (latest_randomforest.json)
         
         Args:
             device_id: Device identifier
@@ -357,11 +362,32 @@ class MLService:
             True if model loaded successfully, False otherwise
         """
         try:
-            # Try device-specific model first
-            model_path = self.MODEL_DIR / f"{device_id}_{self.MODEL_FILE}"
-            metadata_path = self.MODEL_DIR / f"{device_id}_{self.METADATA_FILE}"
+            from app.core.config import get_settings
+            settings = get_settings()
             
-            # If not found, try to find latest model from train_model.py
+            model_path = None
+            metadata_path = None
+            
+            # 1. Try current model pointer (preferred for production)
+            current_pointer_file = Path(settings.model_current_pointer)
+            if current_pointer_file.exists():
+                try:
+                    with open(current_pointer_file, 'r') as f:
+                        pointer_data = json.load(f)
+                    model_path = Path(pointer_data['model_path'])
+                    metadata_path = Path(pointer_data['metadata_path'])
+                    logger.info(f"Using current model pointer: {pointer_data['version']}")
+                except Exception as e:
+                    logger.warning(f"Error reading current model pointer: {e}")
+            
+            # 2. Try device-specific model
+            if model_path is None or not model_path.exists():
+                model_path = self.MODEL_DIR / f"{device_id}_{self.MODEL_FILE}"
+                metadata_path = self.MODEL_DIR / f"{device_id}_{self.METADATA_FILE}"
+                if model_path.exists():
+                    logger.info(f"Using device-specific model: {model_path}")
+            
+            # 3. Try latest model from train_model.py (backward compatibility)
             if not model_path.exists():
                 latest_json = self.MODEL_DIR / "latest_randomforest.json"
                 if latest_json.exists():
@@ -372,7 +398,7 @@ class MLService:
                     logger.info(f"Using latest trained model: {latest['model_file']}")
             
             if not model_path.exists():
-                logger.warning(f"Model file not found: {model_path}")
+                logger.warning(f"No model file found (checked current pointer, device-specific, and latest)")
                 return False
             
             if not metadata_path.exists():

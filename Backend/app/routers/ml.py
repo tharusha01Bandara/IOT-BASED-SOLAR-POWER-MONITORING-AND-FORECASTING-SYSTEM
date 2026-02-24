@@ -273,13 +273,13 @@ async def predict_power(
     description="Get information about trained model including metrics and features"
 )
 async def get_model_status(
-    device_id: Annotated[str, Query(
+    service: Annotated[MLService, Depends(get_ml_service)],
+    device_id: str = Query(
         description="Device identifier",
         min_length=1,
         max_length=50,
         example="tracker01"
-    )],
-    service: Annotated[MLService, Depends(get_ml_service)]
+    )
 ) -> MLStatusResponse:
     """
     Get status and metadata of trained model.
@@ -317,11 +317,11 @@ async def get_model_status(
     description="Delete trained model files for a specific device"
 )
 async def delete_model(
-    device_id: Annotated[str, Query(
+    service: Annotated[MLService, Depends(get_ml_service)],
+    device_id: str = Query(
         description="Device identifier",
         example="tracker01"
-    )],
-    service: Annotated[MLService, Depends(get_ml_service)]
+    )
 ):
     """
     Delete trained model and metadata for a device.

@@ -38,6 +38,20 @@ class Settings(BaseSettings):
     # Collection names
     collection_readings: str = Field(default="readings_raw", alias="COLLECTION_READINGS")
     collection_predictions: str = Field(default="predictions", alias="COLLECTION_PREDICTIONS")
+    collection_model_runs: str = Field(default="model_runs", alias="COLLECTION_MODEL_RUNS")
+    
+    # ML Model configuration
+    model_dir: str = Field(default="app/ml_models", alias="MODEL_DIR")
+    model_versions_dir: str = Field(default="app/ml_models/versions", alias="MODEL_VERSIONS_DIR")
+    model_current_pointer: str = Field(default="app/ml_models/current_model.json", alias="MODEL_CURRENT_POINTER")
+    
+    # Retraining configuration
+    retrain_enabled: bool = Field(default=True, alias="RETRAIN_ENABLED")
+    retrain_days: int = Field(default=7, alias="RETRAIN_DAYS")
+    retrain_interval_hours: int = Field(default=24, alias="RETRAIN_INTERVAL_HOURS")
+    retrain_time: str = Field(default="18:30", alias="RETRAIN_TIME")  # HH:MM format
+    timezone: str = Field(default="Asia/Colombo", alias="TIMEZONE")
+    mae_threshold_percent: float = Field(default=10.0, alias="MAE_THRESHOLD_PERCENT")  # Max allowed MAE increase
     
     # CORS settings (stored as strings, parsed to lists)
     cors_origins: str = Field(
@@ -83,7 +97,8 @@ class Settings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=False,
-        extra="ignore"  # Ignore extra fields in .env
+        extra="ignore",  # Ignore extra fields in .env
+        protected_namespaces=('settings_',)  # Change protected namespace to avoid conflicts with model_ fields
     )
 
 

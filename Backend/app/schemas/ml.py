@@ -43,7 +43,8 @@ class MLTrainRequest(BaseModel):
                 "days": 7,
                 "model_type": "random_forest"
             }
-        }
+        },
+        "protected_namespaces": ()
     }
 
 
@@ -79,7 +80,8 @@ class MLTrainResponse(BaseModel):
                 "trained_at": "2026-02-23T16:00:00Z",
                 "model_version": "1708704000"
             }
-        }
+        },
+        "protected_namespaces": ()
     }
 
 
@@ -118,7 +120,8 @@ class MLPredictRequest(BaseModel):
                 "power": 42.55,
                 "store_prediction": False
             }
-        }
+        },
+        "protected_namespaces": ()
     }
 
 
@@ -148,7 +151,8 @@ class MLPredictResponse(BaseModel):
                 "predicted_at": "2026-02-23T10:30:00Z",
                 "prediction_stored": False
             }
-        }
+        },
+        "protected_namespaces": ()
     }
 
 
@@ -181,7 +185,8 @@ class MLStatusResponse(BaseModel):
                 "model_version": "1708704000",
                 "samples_trained": 672
             }
-        }
+        },
+        "protected_namespaces": ()
     }
 
 

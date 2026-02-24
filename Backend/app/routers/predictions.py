@@ -49,13 +49,13 @@ def get_predictions_service(
     description="Retrieve the most recent ML prediction for a device"
 )
 async def get_latest_prediction(
-    device_id: Annotated[str, Query(
+    service: Annotated[PredictionsService, Depends(get_predictions_service)],
+    device_id: str = Query(
         description="Device identifier",
         min_length=1,
         max_length=50,
         example="tracker01"
-    )],
-    service: Annotated[PredictionsService, Depends(get_predictions_service)]
+    )
 ) -> PredictionResponse:
     """
     Get the latest ML prediction for a specific device.
@@ -117,19 +117,20 @@ async def get_latest_prediction(
     description="Retrieve multiple predictions for a device"
 )
 async def get_prediction_history(
-    device_id: Annotated[str, Query(
+    service: Annotated[PredictionsService, Depends(get_predictions_service)],
+    device_id: str = Query(
         description="Device identifier",
         min_length=1,
         max_length=50,
         example="tracker01"
-    )],
-    service: Annotated[PredictionsService, Depends(get_predictions_service)],
-    limit: Annotated[int, Query(
+    ),
+    limit: int = Query(
+        default=100,
         description="Maximum number of predictions to return",
         ge=1,
         le=1000,
         example=100
-    )] = 100
+    )
 ) -> List[PredictionResponse]:
     """
     Get historical ML predictions for a device.

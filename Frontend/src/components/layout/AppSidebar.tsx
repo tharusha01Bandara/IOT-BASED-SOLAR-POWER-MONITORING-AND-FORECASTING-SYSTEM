@@ -1,4 +1,4 @@
-import { LayoutDashboard, BarChart3, Settings2, Brain, Sun } from "lucide-react";
+import { LayoutDashboard, BarChart3, Settings2, Brain, MessageSquare, Sun } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
   Sidebar,
@@ -17,6 +17,7 @@ const navItems = [
   { title: "Analytics", url: "/analytics", icon: BarChart3 },
   { title: "Control & Events", url: "/control", icon: Settings2 },
   { title: "Model & Health", url: "/model", icon: Brain },
+  { title: "AI Chat", url: "/chat", icon: MessageSquare },
 ];
 
 export function AppSidebar() {

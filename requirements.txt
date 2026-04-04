@@ -1,0 +1,32 @@
+# FastAPI Framework
+fastapi
+uvicorn[standard]
+
+# MongoDB Database
+pymongo
+
+# Environment Variables
+python-dotenv
+
+# Data Validation
+pydantic
+pydantic-settings
+
+# Date/Time Handling
+python-dateutil
+pytz
+
+# CORS and Security
+python-multipart
+
+# HTTP Client (for testing)
+requests
+
+# Logging (enhanced)
+python-json-logger
+
+# Machine Learning
+scikit-learn
+pandas
+numpy
+joblib

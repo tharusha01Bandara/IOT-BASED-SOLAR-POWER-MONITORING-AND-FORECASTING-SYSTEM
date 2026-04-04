@@ -5,6 +5,7 @@ import { TopBar } from "./TopBar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { useSolarData } from "@/hooks/useSolarData";
 import { SolarDataContext } from "@/contexts/SolarDataContext";
+import { ChatLauncher } from "@/components/chat/ChatLauncher";
 
 export function AppLayout() {
   const solarData = useSolarData();
@@ -20,6 +21,7 @@ export function AppLayout() {
             <main className="flex-1 p-4 md:p-6 overflow-auto">
               <Outlet />
             </main>
+            <ChatLauncher />
           </div>
         </div>
       </SidebarProvider>

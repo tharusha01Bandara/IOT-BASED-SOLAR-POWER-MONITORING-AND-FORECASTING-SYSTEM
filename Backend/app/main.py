@@ -16,7 +16,7 @@ import logging
 from app.core.config import get_settings
 from app.core.logging import setup_logging, get_logger
 from app.db.mongodb import mongodb_client
-from app.routers import readings, predictions, health, ml, ml_management
+from app.routers import readings, predictions, health, ml, ml_management, chat
 
 # Get application settings
 settings = get_settings()
@@ -180,6 +180,11 @@ app.include_router(
     prefix=settings.api_v1_prefix
 )
 
+app.include_router(
+    chat.router,
+    prefix=settings.api_v1_prefix
+)
+
 app.include_router(    health.router,
     prefix=settings.api_v1_prefix
 )
@@ -207,7 +212,8 @@ async def root():
         "endpoints": {
             "health": f"{settings.api_v1_prefix}/health",
             "readings": f"{settings.api_v1_prefix}/readings",
-            "predictions": f"{settings.api_v1_prefix}/prediction"
+            "predictions": f"{settings.api_v1_prefix}/prediction",
+            "chat": f"{settings.api_v1_prefix}/chat"
         }
     }
 

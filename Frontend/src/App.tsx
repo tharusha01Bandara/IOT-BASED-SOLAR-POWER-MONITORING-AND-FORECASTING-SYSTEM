@@ -8,6 +8,7 @@ import Overview from "@/pages/Overview";
 import Analytics from "@/pages/Analytics";
 import Control from "@/pages/Control";
 import ModelHealth from "@/pages/ModelHealth";
+import Chat from "@/pages/Chat";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/control" element={<Control />} />
             <Route path="/model" element={<ModelHealth />} />
+            <Route path="/chat" element={<Chat />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -65,6 +65,16 @@ class Settings(BaseSettings):
     # API configuration
     api_v1_prefix: str = Field(default="/api", alias="API_V1_PREFIX")
     max_query_minutes: int = Field(default=10080, alias="MAX_QUERY_MINUTES")  # 1 week default
+
+    # LLM configuration for grounded chat assistant
+    llm_enabled: bool = Field(default=False, alias="LLM_ENABLED")
+    llm_api_key: str = Field(default="", alias="LLM_API_KEY")
+    llm_api_url: str = Field(default="https://generativelanguage.googleapis.com/v1beta/openai", alias="LLM_API_URL")
+    llm_api_path: str = Field(default="/chat/completions", alias="LLM_API_PATH")
+    llm_model: str = Field(default="gemini-2.0-flash", alias="LLM_MODEL")
+    llm_temperature: float = Field(default=0.2, alias="LLM_TEMPERATURE")
+    llm_max_tokens: int = Field(default=500, alias="LLM_MAX_TOKENS")
+    llm_timeout_seconds: int = Field(default=20, alias="LLM_TIMEOUT_SECONDS")
     
     @validator("log_level")
     def validate_log_level(cls, v):

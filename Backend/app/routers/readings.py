@@ -15,6 +15,7 @@ from app.db.mongodb import get_readings_collection, get_predictions_collection
 from app.schemas.readings import (
     ReadingCreate,
     ReadingResponse,
+    HistoryResponse,
     ReadingSuccessResponse,
     ErrorResponse
 )
@@ -272,9 +273,9 @@ async def get_latest_reading(
 
 @router.get(
     "/history",
-    response_model=List[ReadingResponse],
+    response_model=List[HistoryResponse],
     summary="Get reading history",
-    description="Retrieve historical readings within a time range"
+    description="Retrieve historical readings limited to N recent records"
 )
 async def get_reading_history(
     service: Annotated[ReadingsService, Depends(get_readings_service)],
@@ -285,28 +286,28 @@ async def get_reading_history(
         max_length=50,
         example="tracker01"
     ),
-    minutes: int = Query(
-        default=60,
-        description="Time window in minutes to look back",
+    limit: int = Query(
+        default=50,
+        description="Number of recent records to return",
         ge=1,
-        le=10080,
-        example=60
+        le=1000,
+        example=50
     )
-) -> List[ReadingResponse]:
+) -> List[HistoryResponse]:
     """
-    Get historical sensor readings within a time window.
-    
+    Get historical sensor readings limited to N recent records.
+
     Returns readings sorted by timestamp in ascending order (oldest first).
-    
+
     Args:
         device_id: Unique device identifier
-        minutes: Number of minutes to look back (default: 60, max: 10080)
+        limit: Number of records to return (default: 50, max: 1000)
         service: Readings service instance (injected)
         settings: Application settings (injected)
-        
+
     Returns:
-        List of readings within the time range
-        
+        List of lightweight chart response items
+
     Raises:
         HTTPException: 500 if database error
     """
@@ -314,14 +315,12 @@ async def get_reading_history(
         # Retrieve reading history
         readings = await service.get_reading_history(
             device_id=device_id,
-            minutes=minutes,
-            max_minutes=settings.max_query_minutes
+            limit=limit,
+            max_limit=1000
         )
-        
+
         # Convert to response models
-        return [ReadingResponse(**reading) for reading in readings]
-        
-    except PyMongoError as e:
+        return [HistoryResponse(**reading) for reading in readings]
         logger.error(f"Database error while retrieving reading history: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

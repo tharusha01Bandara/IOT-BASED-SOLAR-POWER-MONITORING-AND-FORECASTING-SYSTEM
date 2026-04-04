@@ -30,32 +30,66 @@ class PyObjectId(ObjectId):
         field_schema.update(type="string")
 
 
+def serialize_datetime(dt: Any) -> Optional[str]:
+    """Helper to safely serialize datetime to ISO format string."""
+    if not dt:
+        return None
+    if isinstance(dt, datetime):
+        iso_str = dt.isoformat()
+        # Fast API backend standard typically appends Z for UTC if naive
+        return iso_str if iso_str.endswith('Z') or '+' in iso_str else iso_str + 'Z'
+    return str(dt)
+
+
 def reading_helper(reading: Dict[str, Any]) -> Dict[str, Any]:
     """
     Convert MongoDB reading document to JSON-serializable dictionary.
-    
+
     Args:
         reading: MongoDB document from readings_raw collection
-        
+
     Returns:
         Dict with converted ObjectId and datetime fields
     """
     if not reading:
         return {}
-    
+
     return {
         "id": str(reading["_id"]) if "_id" in reading else None,
         "device_id": reading.get("device_id"),
-        "timestamp": reading.get("timestamp"),
+        "timestamp": serialize_datetime(reading.get("timestamp")),
+        "device_timestamp": reading.get("device_timestamp"),
         "servo_angle": reading.get("servo_angle"),
         "temperature": reading.get("temperature"),
         "humidity": reading.get("humidity"),
         "lux": reading.get("lux"),
+        "ldr_left": reading.get("ldr_left"),
+        "ldr_right": reading.get("ldr_right"),
         "voltage": reading.get("voltage"),
         "current": reading.get("current"),
         "power": reading.get("power"),
         "fan_status": reading.get("fan_status"),
         "status": reading.get("status"),
+    }
+
+
+def history_helper(reading: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Convert MongoDB document to a lightweight format for charts.
+    Includes only essential fields and formatted datetime as ISO string.
+    """
+    if not reading:
+        return {}
+
+    return {
+        "timestamp": serialize_datetime(reading.get("timestamp")),
+        "power": reading.get("power"),
+        "voltage": reading.get("voltage"),
+        "current": reading.get("current"),
+        "temperature": reading.get("temperature"),
+        "humidity": reading.get("humidity"),
+        "lux": reading.get("lux"),
+        "servo_angle": reading.get("servo_angle"),
     }
 
 

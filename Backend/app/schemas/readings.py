@@ -16,6 +16,8 @@ class FanStatus(str, Enum):
     ON = "on"
     OFF = "off"
     AUTO = "auto"
+    ON_UPPER = "ON"
+    OFF_UPPER = "OFF"
 
 
 class DeviceStatus(str, Enum):
@@ -24,6 +26,7 @@ class DeviceStatus(str, Enum):
     OFFLINE = "offline"
     ERROR = "error"
     MAINTENANCE = "maintenance"
+    OK = "ok"
 
 
 class ReadingBase(BaseModel):
@@ -43,10 +46,15 @@ class ReadingBase(BaseModel):
     )
     
     timestamp: datetime = Field(
-        ...,
+        default_factory=datetime.utcnow,
         description="ISO 8601 formatted timestamp of the reading"
     )
-    
+
+    device_timestamp: Optional[str] = Field(
+        None,
+        description="Original timestamp string from the ESP32 device"
+    )
+
     servo_angle: float = Field(
         ...,
         description="Servo motor angle in degrees",
@@ -73,7 +81,17 @@ class ReadingBase(BaseModel):
         description="Light intensity in lux",
         ge=0.0
     )
-    
+
+    ldr_left: Optional[int] = Field(
+        None,
+        description="Left LDR raw sensor value"
+    )
+
+    ldr_right: Optional[int] = Field(
+        None,
+        description="Right LDR raw sensor value"
+    )
+
     voltage: float = Field(
         ...,
         description="Solar panel voltage in volts",
@@ -182,17 +200,23 @@ class ReadingResponse(ReadingBase):
     }
 
 
-class PredictionResponse(BaseModel):
+class HistoryResponse(BaseModel):
     """
-    Schema for ML prediction response.
-    
-    Contains predicted values and model metadata.
+    Lightweight schema for chart history data.
+    Excludes verbose status fields and keeps only core telemetry.
     """
-    
-    device_id: str = Field(..., description="Device identifier")
-    timestamp: datetime = Field(..., description="Prediction timestamp")
-    predicted_power: Optional[float] = Field(None, description="Predicted power output in watts")
-    predicted_angle: Optional[float] = Field(None, description="Predicted optimal angle")
+    timestamp: datetime = Field(..., description="ISO 8601 formatted timestamp")
+    power: float = Field(..., description="Calculated power in watts")
+    voltage: float = Field(..., description="Solar panel voltage")
+    current: float = Field(..., description="Solar panel current")
+    temperature: float = Field(..., description="Temperature reading")
+    humidity: float = Field(..., description="Relative humidity percentage")
+    lux: float = Field(..., description="Light intensity in lux")
+    servo_angle: float = Field(..., description="Servo motor angle")
+
+    model_config = {
+        "from_attributes": True
+    }
     confidence: Optional[float] = Field(None, description="Prediction confidence score", ge=0.0, le=1.0)
     model_version: Optional[str] = Field(None, description="ML model version used")
     

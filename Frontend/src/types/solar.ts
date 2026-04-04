@@ -7,7 +7,11 @@ export interface SolarReading {
   temperature: number;
   humidity: number;
   servo_angle: number;
-  fan_status: boolean;
+  fan_status: string;
+  ldr_left?: number;
+  ldr_right?: number;
+  status?: string;
+  device_id?: string;
 }
 
 export interface PredictionData {

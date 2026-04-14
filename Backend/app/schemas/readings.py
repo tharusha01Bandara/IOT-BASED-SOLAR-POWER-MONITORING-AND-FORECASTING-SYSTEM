@@ -217,17 +217,35 @@ class HistoryResponse(BaseModel):
     model_config = {
         "from_attributes": True
     }
+
+
+class PredictionResponse(BaseModel):
+    """
+    Schema for prediction response returned by the predictions router.
+
+    Supports both the legacy prediction document shape and the current ML
+    prediction fields so existing endpoints can serialize without breaking.
+    """
+
+    id: Optional[str] = Field(None, alias="_id", description="MongoDB document ID")
+    device_id: str = Field(..., description="Device identifier")
+    timestamp: datetime = Field(..., description="Prediction timestamp")
+    predicted_power: Optional[float] = Field(None, description="Predicted power output")
+    predicted_power_15min: Optional[float] = Field(None, description="Predicted power output 15 minutes ahead")
+    predicted_angle: Optional[float] = Field(None, description="Predicted servo angle")
     confidence: Optional[float] = Field(None, description="Prediction confidence score", ge=0.0, le=1.0)
     model_version: Optional[str] = Field(None, description="ML model version used")
-    
+
     model_config = {
         "populate_by_name": True,
-        "protected_namespaces": (),  # Allow 'model_' prefix in field names
+        "from_attributes": True,
+        "protected_namespaces": (),
         "json_schema_extra": {
             "example": {
                 "device_id": "tracker01",
                 "timestamp": "2026-02-23T11:00:00Z",
                 "predicted_power": 45.2,
+                "predicted_power_15min": 45.2,
                 "predicted_angle": 50.0,
                 "confidence": 0.92,
                 "model_version": "v1.0.0"

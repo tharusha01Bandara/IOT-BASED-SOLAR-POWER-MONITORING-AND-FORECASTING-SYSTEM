@@ -2,30 +2,32 @@
   "device_id": "tracker01",
   "model_type": "random_forest",
   "features": [
+    "hour",
+    "minute",
+    "day_of_week",
     "servo_angle",
     "temperature",
     "humidity",
     "lux",
+    "ldr_left",
+    "ldr_right",
     "voltage",
     "current",
     "power",
-    "hour",
-    "minute",
-    "day_of_week",
+    "fan_on",
     "power_diff",
     "lux_diff",
     "rolling_mean_power_5",
-    "rolling_mean_lux_5",
-    "fan_on"
+    "rolling_mean_lux_5"
   ],
   "metrics": {
-    "mae": 0.09657202699504551,
-    "rmse": 0.15617534929178567,
-    "r2_score": 0.8819688193524047
+    "mae": 0.6453584251378168,
+    "rmse": 1.3442195640237684,
+    "r2_score": 0.09619756555753478
   },
-  "trained_at": "2026-04-22T06:26:18.944582",
-  "model_version": "1776819378",
-  "samples_trained": 1395,
-  "samples_tested": 349,
+  "trained_at": "2026-04-22T16:38:51.883951",
+  "model_version": "1776856131",
+  "samples_trained": 1361,
+  "samples_tested": 341,
   "forecast_minutes": 15
 }

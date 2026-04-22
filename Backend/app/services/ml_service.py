@@ -37,7 +37,8 @@ class MLService:
     """
     
     # Model storage paths
-    MODEL_DIR = Path("app/ml_models")
+    BASE_DIR = Path(__file__).resolve().parent.parent
+    MODEL_DIR = BASE_DIR / "ml_models"
     MODEL_FILE = "model.pkl"
     METADATA_FILE = "model_meta.json"
     

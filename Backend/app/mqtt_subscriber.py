@@ -3,140 +3,155 @@ import sys
 import json
 import asyncio
 from datetime import datetime
+
 from paho.mqtt.client import Client, MQTTMessage
 from paho.mqtt.enums import CallbackAPIVersion
 from pydantic import ValidationError
 
 # Ensure app imports work when running as standalone script
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from app.core.config import get_settings
-from app.core.logging import get_logger
 from app.db.mongodb import mongodb_client
 from app.schemas.readings import ReadingCreate
 from app.services.readings_service import ReadingsService
 from app.services.ml_service import MLService
 
-logger = get_logger(__name__)
 settings = get_settings()
 
-MQTT_BROKER = os.getenv("MQTT_BROKER", "test.mosquitto.org")
+MQTT_BROKER = os.getenv("MQTT_BROKER", "broker.hivemq.com")
 MQTT_PORT = int(os.getenv("MQTT_PORT", 1883))
 MQTT_TOPIC = os.getenv("MQTT_TOPIC", "solarxxx5678934/tracker01/readings")
 
-def on_connect(client: Client, userdata, flags, rc):
-    """Callback when the client connects to the broker."""
-    if rc == 0:
-        logger.info(f"Connected to MQTT Broker at {MQTT_BROKER}:{MQTT_PORT}")
-        client.subscribe(MQTT_TOPIC)
-        logger.info(f"Subscribed to topic: {MQTT_TOPIC}")
-    else:
-        logger.error(f"Failed to connect, return code {rc}")
 
 def normalize_payload(payload: dict) -> dict:
-    """Normalize payload before Pydantic validation."""
-    # Move ESP32 string timestamp to device_timestamp
-    if "timestamp" in payload:
-        payload["device_timestamp"] = str(payload.pop("timestamp"))
-    
-    # Let Pydantic default_factory create datetime.utcnow() for 'timestamp'
-    
-    # Handle 'ok'/'ON' values gracefully
-    if "status" in payload and payload["status"].lower() == "ok":
-        payload["status"] = "ok" # allowed by our schema change
-    
-    if "fan_status" in payload and payload["fan_status"].upper() == "ON":
-        payload["fan_status"] = "on" # or whatever is valid
+    normalized = payload.copy()
 
-    return payload
+    if "timestamp" in normalized:
+        normalized["device_timestamp"] = str(normalized.pop("timestamp"))
+
+    if "fan_status" in normalized and isinstance(normalized["fan_status"], str):
+        normalized["fan_status"] = normalized["fan_status"].upper()
+
+    if "status" in normalized and isinstance(normalized["status"], str):
+        normalized["status"] = normalized["status"].lower()
+
+    normalized.setdefault("lux", 0.0)
+    normalized.setdefault("ldr_left", None)
+    normalized.setdefault("ldr_right", None)
+    normalized.setdefault("fan_status", "OFF")
+    normalized.setdefault("status", "ok")
+
+    return normalized
+
+
+def on_connect(client: Client, userdata, flags, rc):
+    print(f"on_connect called, rc = {rc}")
+
+    if rc == 0:
+        print(f"✅ Connected to MQTT Broker at {MQTT_BROKER}:{MQTT_PORT}")
+        client.subscribe(MQTT_TOPIC)
+        print(f"✅ Subscribed to topic: {MQTT_TOPIC}")
+    else:
+        print(f"❌ Failed to connect to MQTT broker, return code = {rc}")
+
 
 def on_message(client: Client, userdata, msg: MQTTMessage):
-    """Callback when a PUBLISH message is received from the server."""
-    logger.debug(f"Received message on topic {msg.topic}")
-    
+    print(f"\n📩 Message received on topic: {msg.topic}")
+
     try:
-        payload = json.loads(msg.payload.decode('utf-8'))
+        raw_payload = msg.payload.decode("utf-8")
+        print(f"Raw payload: {raw_payload}")
+        payload = json.loads(raw_payload)
     except json.JSONDecodeError as e:
-        logger.error(f"Failed to decode JSON payload: {e}")
+        print(f"❌ Invalid JSON payload: {e}")
+        return
+    except Exception as e:
+        print(f"❌ Unexpected error while decoding message: {e}")
         return
 
-    # Normalize payload
     payload = normalize_payload(payload)
+    print(f"Normalized payload: {payload}")
 
-    # Validate using Pydantic schema
     try:
         reading_data = ReadingCreate(**payload)
         reading_dict = reading_data.model_dump()
+        print("✅ Pydantic validation successful")
     except ValidationError as e:
-        logger.error(f"Validation error for incoming payload: {e.errors()}")
+        print(f"❌ Pydantic validation failed: {e.errors()}")
         return
 
-    # Database initialization
     if mongodb_client.database is None:
-        logger.error("Database connection not initialized")
+        print("❌ MongoDB database connection is not initialized")
         return
-
-    readings_collection = mongodb_client.get_collection(settings.collection_readings)
-    predictions_collection = mongodb_client.get_collection(settings.collection_predictions)
-    
-    readings_service = ReadingsService(readings_collection)
-    ml_service = MLService(readings_collection)
 
     try:
-        # We need to run the async create_reading method in a synchronous context
-        # Or change it if readings_service is sync. Let's run it async.
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        
-        result = loop.run_until_complete(readings_service.create_reading(reading_dict))
-        loop.close()
-        
-        logger.info(f"Successfully inserted reading: {result['inserted_id']}")
-        
-        # Trigger ML prediction
-        try:
-            prediction_result = ml_service.predict_next_15min(
-                reading=reading_dict,
-                device_id=reading_data.device_id
-            )
-            
-            # Store prediction
-            prediction_doc = {
-                "device_id": reading_data.device_id,
-                "timestamp": prediction_result['predicted_at'],
-                "predicted_power_15min": prediction_result['predicted_power_15min'],
-                "confidence": prediction_result['confidence'],
-                "model_version": prediction_result['model_version'],
-                "current_power": reading_data.power,
-                "created_at": datetime.utcnow()
-            }
-            predictions_collection.insert_one(prediction_doc)
-            logger.info("Successfully stored prediction")
+        readings_collection = mongodb_client.get_collection(settings.collection_readings)
+        predictions_collection = mongodb_client.get_collection(settings.collection_predictions)
 
-        except Exception as ml_err:
-            logger.error(f"ML Prediction failed: {ml_err}")
+        readings_service = ReadingsService(readings_collection)
+        ml_service = MLService(readings_collection)
 
+        result = asyncio.run(readings_service.create_reading(reading_dict))
+        print(f"✅ Inserted reading with ID: {result['inserted_id']}")
     except Exception as db_err:
-        logger.error(f"Database operation failed: {db_err}")
+        print(f"❌ Failed to store reading in database: {db_err}")
+        return
+
+    try:
+        prediction_result = ml_service.predict_next_15min(
+            reading=reading_dict,
+            device_id=reading_data.device_id
+        )
+
+        prediction_doc = {
+            "device_id": reading_data.device_id,
+            "timestamp": prediction_result["predicted_at"],
+            "predicted_power_15min": prediction_result["predicted_power_15min"],
+            "confidence": prediction_result["confidence"],
+            "model_version": prediction_result["model_version"],
+            "current_power": reading_data.power,
+            "created_at": datetime.utcnow(),
+        }
+
+        predictions_collection.insert_one(prediction_doc)
+        print("✅ Stored ML prediction successfully")
+    except Exception as ml_err:
+        print(f"❌ ML prediction failed: {ml_err}")
+
 
 def start_subscriber():
-    """Initialize database and start MQTT loop."""
-    logger.info("Starting MQTT Subscriber...")
-    mongodb_client.connect(settings)
+    print("1. Starting MQTT Subscriber...")
+    print(f"2. MongoDB URL = {settings.mongodb_url}")
+    print(f"3. MongoDB DB Name = {settings.mongodb_db_name}")
+    print(f"4. MQTT Broker = {MQTT_BROKER}")
+    print(f"5. MQTT Port = {MQTT_PORT}")
+    print(f"6. MQTT Topic = {MQTT_TOPIC}")
 
-    client = Client(CallbackAPIVersion.VERSION1)
+    try:
+        print("7. Connecting to MongoDB...")
+        mongodb_client.connect(settings)
+        print("8. ✅ MongoDB connected successfully")
+    except Exception as e:
+        print(f"❌ Failed to connect to MongoDB: {e}")
+        sys.exit(1)
+
+    print("9. Creating MQTT client...")
+    client = Client(callback_api_version=CallbackAPIVersion.VERSION1)
+
     client.on_connect = on_connect
     client.on_message = on_message
-    
-    # Enable auth if needed
-    # client.username_pw_set("user", "pass")
-    
+
     try:
+        print(f"10. Connecting to broker {MQTT_BROKER}:{MQTT_PORT} ...")
         client.connect(MQTT_BROKER, MQTT_PORT, 60)
+        print("11. connect() returned successfully")
+        print("12. Waiting for MQTT messages...")
         client.loop_forever()
     except Exception as e:
-        logger.error(f"Error starting MQTT client: {e}")
+        print(f"❌ Failed to start MQTT client: {e}")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     start_subscriber()

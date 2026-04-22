@@ -141,9 +141,11 @@ class SolarSimulator:
         power = voltage * current
 
         # 8. Fan Logic
-        if temperature > 40.0:
+        # Turn ON when temp > 25°C
+        # Turn OFF when temp < 23°C (hysteresis prevents bouncing)
+        if temperature > 25.0:
             self.fan_is_on = True
-        elif temperature < 38.0:
+        elif temperature < 23.0:
             self.fan_is_on = False
             
         fan_status = "ON" if self.fan_is_on else "OFF"

@@ -480,13 +480,13 @@ class SolarSensorSimulator:
         """
         Generate fan status with hysteresis to prevent rapid on/off cycling.
         
-        ON if temp > 40°C
-        OFF if temp < 38°C
+        ON if temp > 25°C
+        OFF if temp < 23°C (hysteresis to prevent bouncing)
         Otherwise, maintain previous state
         """
-        if temperature > 40.0:
+        if temperature > 50.0:
             self.fan_state = True
-        elif temperature < 38.0:
+        elif temperature < 23.0:
             self.fan_state = False
         # else: maintain current state
         

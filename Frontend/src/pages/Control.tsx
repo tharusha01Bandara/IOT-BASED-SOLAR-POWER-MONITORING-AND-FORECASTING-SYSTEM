@@ -23,11 +23,11 @@ export default function Control() {
           <div className="space-y-2 text-sm">
             <div className="flex justify-between p-2 rounded-lg bg-muted/50">
               <span className="text-muted-foreground">Fan ON threshold</span>
-              <span className="font-mono font-medium">&gt; 40°C</span>
+              <span className="font-mono font-medium">&gt; 25°C</span>
             </div>
             <div className="flex justify-between p-2 rounded-lg bg-muted/50">
               <span className="text-muted-foreground">Fan OFF threshold</span>
-              <span className="font-mono font-medium">&lt; 38°C</span>
+              <span className="font-mono font-medium">&lt; 23°C</span>
             </div>
             <div className="flex justify-between p-2 rounded-lg bg-muted/50">
               <span className="text-muted-foreground">Current temp</span>

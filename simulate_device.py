@@ -7,7 +7,7 @@ import paho.mqtt.client as mqtt
 # -------- MQTT CONFIG --------
 BROKER = "broker.hivemq.com"
 PORT = 1883
-TOPIC = "solarxxy5678934/tracker01/readings"
+TOPIC = "solarxxx5678934/tracker01/readings"
 
 client = mqtt.Client()
 client.connect(BROKER, PORT, 60)
@@ -36,9 +36,9 @@ while True:
     servo_angle = max(75, min(105, servo_angle))
 
     # Fan logic
-    if temperature > 40:
+    if temperature > 25:
         fan_on = True
-    elif temperature < 38:
+    elif temperature < 18:
         fan_on = False
 
     fan_status = "ON" if fan_on else "OFF"

@@ -5,6 +5,7 @@ import {
   generateDataHealth,
   generateAlerts,
   generateFanEvents,
+  generateFanEventsFromReadings,
   generatePrediction
 } from "@/data/mock";
 import { config } from "@/lib/config";
@@ -22,7 +23,7 @@ export function useSolarData() {
   const [modelStatus, setModelStatus] = useState<ModelStatus>(generateModelStatus());
   const [dataHealth, setDataHealth] = useState<DataHealth>(generateDataHealth());
   const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [fanEvents, setFanEvents] = useState<FanEvent[]>(generateFanEvents(30));
+  const [fanEvents, setFanEvents] = useState<FanEvent[]>([]);
   const [timeRange, setTimeRange] = useState<TimeRange>("1h");
   const [historicalData, setHistoricalData] = useState<SolarReading[]>([]);
   const [isLive, setIsLive] = useState(true);
@@ -36,6 +37,7 @@ export function useSolarData() {
       if (response.ok) {
         const data = await response.json();
         setCurrentReading(data);
+        setAlerts(generateAlerts(data));
         if (data.power) {
           setPrediction(generatePrediction(data.power));
         }
@@ -53,6 +55,8 @@ export function useSolarData() {
       if (response.ok) {
         const data = await response.json();
         setHistoricalData(data);
+        // Generate fan events from real backend data
+        setFanEvents(generateFanEventsFromReadings(data));
       }
     } catch (error) {
       console.error("Failed to fetch history:", error);
@@ -68,6 +72,13 @@ export function useSolarData() {
   useEffect(() => {
     fetchHistory();
   }, [timeRange]);
+
+  // Update fan events whenever historical data changes (from real backend data)
+  useEffect(() => {
+    if (historicalData.length > 0) {
+      setFanEvents(generateFanEventsFromReadings(historicalData));
+    }
+  }, [historicalData]);
 
   useEffect(() => {
     if (isLive) {

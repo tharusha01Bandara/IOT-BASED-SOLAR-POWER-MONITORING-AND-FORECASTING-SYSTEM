@@ -90,7 +90,7 @@ export function generateAlerts(reading: SolarReading): Alert[] {
   if (reading.lux < 35000) {
     alerts.push({ id: "a1", type: "low_lux", severity: "warning", message: `Low lux detected: ${reading.lux} lx`, timestamp: reading.timestamp, value: reading.lux });
   }
-  if (reading.temperature > 42) {
+  if (reading.temperature > 45) {
     alerts.push({ id: "a2", type: "overheat", severity: reading.temperature > 45 ? "critical" : "warning", message: `Temperature high: ${reading.temperature}°C`, timestamp: reading.timestamp, value: reading.temperature });
   }
   if (reading.power < 120) {
@@ -102,18 +102,77 @@ export function generateAlerts(reading: SolarReading): Alert[] {
   return alerts;
 }
 
+/**
+ * Generate mock fan events for demo mode
+ * Fan Thresholds:
+ * - ON: Temperature > 25°C
+ * - OFF: Temperature < 23°C
+ */
 export function generateFanEvents(count: number): FanEvent[] {
   const events: FanEvent[] = [];
+  const FAN_ON_THRESHOLD = 25;
+  const FAN_OFF_THRESHOLD = 23;
   let fanOn = false;
+  
   for (let i = count; i >= 0; i--) {
-    const temp = randomBetween(35, 48);
-    if (!fanOn && temp > 40) {
+    const temp = randomBetween(20, 35);
+    if (!fanOn && temp > FAN_ON_THRESHOLD) {
       fanOn = true;
-      events.push({ timestamp: generateTimestamp(i * 5), event_type: "fan_on", reason: `Temp exceeded 40°C threshold`, value: temp });
-    } else if (fanOn && temp < 38) {
+      events.push({ timestamp: generateTimestamp(i * 5), event_type: "fan_on", reason: `Temp exceeded ${FAN_ON_THRESHOLD}°C threshold`, value: temp });
+    } else if (fanOn && temp < FAN_OFF_THRESHOLD) {
       fanOn = false;
-      events.push({ timestamp: generateTimestamp(i * 5), event_type: "fan_off", reason: `Temp dropped below 38°C`, value: temp });
+      events.push({ timestamp: generateTimestamp(i * 5), event_type: "fan_off", reason: `Temp dropped below ${FAN_OFF_THRESHOLD}°C`, value: temp });
     }
   }
+  return events;
+}
+
+/**
+ * Generate fan events from real sensor readings by detecting fan status transitions
+ * Analyzes historical data to identify when fan turned ON/OFF and the temperature at that moment
+ * 
+ * Fan Thresholds:
+ * - ON: Temperature > 25°C (cooling active)
+ * - OFF: Temperature < 23°C (hysteresis prevents bouncing)
+ */
+export function generateFanEventsFromReadings(readings: SolarReading[]): FanEvent[] {
+  if (!readings || readings.length === 0) return [];
+  
+  const events: FanEvent[] = [];
+  let previousStatus: string | null = null;
+  const FAN_ON_THRESHOLD = 45;   // Temperature to turn fan ON
+  const FAN_OFF_THRESHOLD = 38  ;  // Temperature to turn fan OFF (hysteresis)
+  
+  // Sort by timestamp ascending to process chronologically
+  const sortedReadings = [...readings].sort(
+    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+  );
+  
+  for (const reading of sortedReadings) {
+    const currentStatus = reading.fan_status ? String(reading.fan_status).toUpperCase() : "OFF";
+    const temperature = reading.temperature || 0;
+    
+    // Detect transitions
+    if (previousStatus !== null && previousStatus !== currentStatus) {
+      const eventType = currentStatus === "ON" ? "fan_on" : "fan_off";
+      
+      let reason = "";
+      if (currentStatus === "ON") {
+        reason = `Temp exceeded ${FAN_ON_THRESHOLD}°C threshold (${temperature.toFixed(1)}°C)`;
+      } else {
+        reason = `Temp dropped below ${FAN_OFF_THRESHOLD}°C (${temperature.toFixed(1)}°C)`;
+      }
+      
+      events.push({
+        timestamp: reading.timestamp,
+        event_type: eventType,
+        reason,
+        value: temperature,
+      });
+    }
+    
+    previousStatus = currentStatus;
+  }
+  
   return events;
 }

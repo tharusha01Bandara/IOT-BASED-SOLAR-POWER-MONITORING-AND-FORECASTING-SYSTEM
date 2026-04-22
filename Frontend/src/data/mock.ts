@@ -19,7 +19,9 @@ export function generateCurrentReading(): SolarReading {
     temperature: randomBetween(28, 48),
     humidity: randomBetween(30, 75),
     servo_angle: randomBetween(20, 160),
-    fan_status: Math.random() > 0.4,
+    fan_status: Math.random() > 0.4 ? "ON" : "OFF",
+    ldr_left: randomBetween(1900, 2400),
+    ldr_right: randomBetween(1800, 2300),
   };
 }
 
@@ -48,7 +50,9 @@ export function generateHistoricalData(minutes: number): SolarReading[] {
       temperature: Math.round(baseTemp * 10) / 10,
       humidity: Math.min(100, Math.max(0, Math.round(humidity * 10) / 10)),
       servo_angle: Math.round(20 + solarFactor * 140),
-      fan_status: baseTemp > 40,
+      fan_status: baseTemp > 40 ? "ON" : "OFF",
+      ldr_left: Math.round(2000 + randomBetween(-100, 100)),
+      ldr_right: Math.round(1950 + randomBetween(-100, 100)),
     });
   }
   return points;

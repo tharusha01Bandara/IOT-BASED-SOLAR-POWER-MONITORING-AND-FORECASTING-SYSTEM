@@ -7,7 +7,7 @@ export interface SolarReading {
   temperature: number;
   humidity: number;
   servo_angle: number;
-  fan_status: string;
+  fan_status: "ON" | "OFF" | "AUTO" | string;
   ldr_left?: number;
   ldr_right?: number;
   status?: string;

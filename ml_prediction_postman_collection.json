@@ -1,0 +1,298 @@
+{
+  "info": {
+    "name": "Solar Tracker ML Prediction Endpoint",
+    "description": "Complete test collection for /api/ml/predict endpoint",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "TEST 1 - Optimal Sunny Day",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"device_id\": \"tracker01\",\n  \"timestamp\": \"2026-04-22T12:00:00Z\",\n  \"servo_angle\": 50.0,\n  \"temperature\": 35.0,\n  \"humidity\": 40.0,\n  \"lux\": 95000.0,\n  \"voltage\": 22.5,\n  \"current\": 4.2,\n  \"power\": 94.5,\n  \"store_prediction\": true\n}"
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/ml/predict",
+          "protocol": "http",
+          "host": ["127", "0", "0", "1"],
+          "port": "8000",
+          "path": ["api", "ml", "predict"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "TEST 2 - Partial Clouds",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"device_id\": \"tracker01\",\n  \"timestamp\": \"2026-04-22T11:45:00Z\",\n  \"servo_angle\": 45.0,\n  \"temperature\": 28.0,\n  \"humidity\": 60.0,\n  \"lux\": 42000.0,\n  \"voltage\": 19.2,\n  \"current\": 2.8,\n  \"power\": 53.76,\n  \"store_prediction\": true\n}"
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/ml/predict",
+          "protocol": "http",
+          "host": ["127", "0", "0", "1"],
+          "port": "8000",
+          "path": ["api", "ml", "predict"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "TEST 3 - Overcast Day",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"device_id\": \"tracker01\",\n  \"timestamp\": \"2026-04-22T10:30:00Z\",\n  \"servo_angle\": 45.0,\n  \"temperature\": 20.0,\n  \"humidity\": 85.0,\n  \"lux\": 8500.0,\n  \"voltage\": 14.5,\n  \"current\": 0.6,\n  \"power\": 8.7,\n  \"store_prediction\": true\n}"
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/ml/predict",
+          "protocol": "http",
+          "host": ["127", "0", "0", "1"],
+          "port": "8000",
+          "path": ["api", "ml", "predict"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "TEST 4 - Sunset (Low angle)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"device_id\": \"tracker01\",\n  \"timestamp\": \"2026-04-22T18:30:00Z\",\n  \"servo_angle\": 10.0,\n  \"temperature\": 18.0,\n  \"humidity\": 65.0,\n  \"lux\": 3200.0,\n  \"voltage\": 12.5,\n  \"current\": 0.3,\n  \"power\": 3.75,\n  \"store_prediction\": false\n}"
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/ml/predict",
+          "protocol": "http",
+          "host": ["127", "0", "0", "1"],
+          "port": "8000",
+          "path": ["api", "ml", "predict"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "TEST 5 - Night (No sunlight)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"device_id\": \"tracker01\",\n  \"timestamp\": \"2026-04-22T22:00:00Z\",\n  \"servo_angle\": 45.0,\n  \"temperature\": 15.0,\n  \"humidity\": 75.0,\n  \"lux\": 0.0,\n  \"voltage\": 0.0,\n  \"current\": 0.0,\n  \"power\": 0.0,\n  \"store_prediction\": false\n}"
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/ml/predict",
+          "protocol": "http",
+          "host": ["127", "0", "0", "1"],
+          "port": "8000",
+          "path": ["api", "ml", "predict"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "TEST 6 - Heat Stress (48°C)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"device_id\": \"tracker01\",\n  \"timestamp\": \"2026-04-22T14:00:00Z\",\n  \"servo_angle\": 55.0,\n  \"temperature\": 48.0,\n  \"humidity\": 20.0,\n  \"lux\": 88000.0,\n  \"voltage\": 20.5,\n  \"current\": 3.5,\n  \"power\": 71.75,\n  \"store_prediction\": true\n}"
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/ml/predict",
+          "protocol": "http",
+          "host": ["127", "0", "0", "1"],
+          "port": "8000",
+          "path": ["api", "ml", "predict"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "TEST 7 - Cold Conditions (5°C)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"device_id\": \"tracker01\",\n  \"timestamp\": \"2026-04-22T06:30:00Z\",\n  \"servo_angle\": 30.0,\n  \"temperature\": 5.0,\n  \"humidity\": 55.0,\n  \"lux\": 45000.0,\n  \"voltage\": 22.8,\n  \"current\": 3.9,\n  \"power\": 88.92,\n  \"store_prediction\": true\n}"
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/ml/predict",
+          "protocol": "http",
+          "host": ["127", "0", "0", "1"],
+          "port": "8000",
+          "path": ["api", "ml", "predict"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "TEST 8 - Misaligned Panel",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"device_id\": \"tracker01\",\n  \"timestamp\": \"2026-04-22T12:00:00Z\",\n  \"servo_angle\": 15.0,\n  \"temperature\": 32.0,\n  \"humidity\": 45.0,\n  \"lux\": 82000.0,\n  \"voltage\": 18.5,\n  \"current\": 1.8,\n  \"power\": 33.3,\n  \"store_prediction\": true\n}"
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/ml/predict",
+          "protocol": "http",
+          "host": ["127", "0", "0", "1"],
+          "port": "8000",
+          "path": ["api", "ml", "predict"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "TEST 9 - High Humidity (90%)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"device_id\": \"tracker01\",\n  \"timestamp\": \"2026-04-22T08:00:00Z\",\n  \"servo_angle\": 40.0,\n  \"temperature\": 22.0,\n  \"humidity\": 90.0,\n  \"lux\": 65000.0,\n  \"voltage\": 20.2,\n  \"current\": 3.0,\n  \"power\": 60.6,\n  \"store_prediction\": true\n}"
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/ml/predict",
+          "protocol": "http",
+          "host": ["127", "0", "0", "1"],
+          "port": "8000",
+          "path": ["api", "ml", "predict"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "ERROR TEST 1 - Missing Field (servo_angle)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"device_id\": \"tracker01\",\n  \"timestamp\": \"2026-04-22T12:00:00Z\",\n  \"temperature\": 28.0,\n  \"humidity\": 60.0,\n  \"lux\": 75000.0,\n  \"voltage\": 21.0,\n  \"current\": 3.5,\n  \"power\": 73.5,\n  \"store_prediction\": false\n}"
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/ml/predict",
+          "protocol": "http",
+          "host": ["127", "0", "0", "1"],
+          "port": "8000",
+          "path": ["api", "ml", "predict"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "ERROR TEST 2 - Invalid Device (tracker99)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"device_id\": \"tracker99\",\n  \"timestamp\": \"2026-04-22T12:00:00Z\",\n  \"servo_angle\": 45.0,\n  \"temperature\": 28.0,\n  \"humidity\": 60.0,\n  \"lux\": 75000.0,\n  \"voltage\": 21.0,\n  \"current\": 3.5,\n  \"power\": 73.5,\n  \"store_prediction\": false\n}"
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/ml/predict",
+          "protocol": "http",
+          "host": ["127", "0", "0", "1"],
+          "port": "8000",
+          "path": ["api", "ml", "predict"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "ERROR TEST 3 - Out of Range (servo_angle > 180)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"device_id\": \"tracker01\",\n  \"timestamp\": \"2026-04-22T12:00:00Z\",\n  \"servo_angle\": 185.0,\n  \"temperature\": 28.0,\n  \"humidity\": 60.0,\n  \"lux\": 75000.0,\n  \"voltage\": 21.0,\n  \"current\": 3.5,\n  \"power\": 73.5,\n  \"store_prediction\": false\n}"
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/ml/predict",
+          "protocol": "http",
+          "host": ["127", "0", "0", "1"],
+          "port": "8000",
+          "path": ["api", "ml", "predict"]
+        }
+      },
+      "response": []
+    }
+  ]
+}

@@ -19,7 +19,7 @@ interface BackendReadingResponse {
   voltage: number;
   current: number;
   power: number;
-  fan_status: boolean;
+  fan_status: string;
   status?: string;
   ldr_left?: number;
   ldr_right?: number;
@@ -52,7 +52,7 @@ function normalizeReading(data: any): SolarReading {
     temperature: typeof data.temperature === 'number' ? data.temperature : 0,
     humidity: typeof data.humidity === 'number' ? data.humidity : 0,
     servo_angle: typeof data.servo_angle === 'number' ? data.servo_angle : 90,
-    fan_status: Boolean(data.fan_status),
+    fan_status: typeof data.fan_status === 'string' ? data.fan_status : 'OFF',
     ldr_left: typeof data.ldr_left === 'number' ? data.ldr_left : undefined,
     ldr_right: typeof data.ldr_right === 'number' ? data.ldr_right : undefined,
     status: data.status || 'ok',

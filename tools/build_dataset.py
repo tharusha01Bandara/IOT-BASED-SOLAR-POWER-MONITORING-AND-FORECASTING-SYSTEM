@@ -89,22 +89,24 @@ class DatasetConfig:
 
 @dataclass
 class DataQualityReport:
-    """Data quality metrics"""
-    rows_fetched: int
+    """Data quality metrics for final dataset"""
+    rows_before_cleaning: int
     rows_after_cleaning: int
+    rows_after_feature_engineering: int
     rows_after_labeling: int
-    rows_dropped_status: int
-    rows_dropped_duplicates: int
-    rows_dropped_invalid_ranges: int
-    rows_dropped_no_label: int
+    missing_values_per_column: Dict[str, int]
     timestamp_min: str
     timestamp_max: str
-    missing_values: Dict[str, int]
-    power_stats: Dict[str, float]
-    lux_stats: Dict[str, float]
-    temperature_stats: Dict[str, float]
-    label_match_failures: int
-    total_timespan_hours: float
+    power_mean: float
+    power_min: float
+    power_max: float
+    lux_mean: float
+    lux_min: float
+    lux_max: float
+    temperature_mean: float
+    temperature_min: float
+    temperature_max: float
+    label_match_fail_count: int
 
 
 # ============================================================================
@@ -290,7 +292,10 @@ class DataCleaner:
         # Step 4: Validate ranges
         df = self._validate_ranges(df)
         
-        # Step 5: Sort by timestamp
+        # Step 5: Handle optional LDR fields
+        df = self._handle_optional_fields(df)
+        
+        # Step 6: Sort by timestamp
         df = df.sort_values('timestamp').reset_index(drop=True)
         
         self.logger.info(f"✓ Cleaning complete | Final rows: {len(df):,}")
@@ -324,17 +329,17 @@ class DataCleaner:
         return df
     
     def _filter_status(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Keep only readings with status == 'online'"""
+        """Keep only readings with status == 'ok'"""
         initial_count = len(df)
         
         # Keep only online status
-        df = df[df['status'] == 'online'].copy()
+        df = df[df['status'] == 'ok'].copy()
         
         dropped = initial_count - len(df)
         self.stats['rows_dropped_status'] = dropped
         
         if dropped > 0:
-            self.logger.debug(f"Filtered out {dropped} non-online readings")
+            self.logger.debug(f"Filtered out {dropped} non-ok readings")
         
         return df
     
@@ -359,12 +364,13 @@ class DataCleaner:
         
         # Build boolean mask for valid rows
         valid_mask = (
-            (df['lux'] >= self.config.min_lux) &
-            (df['voltage'] >= self.config.min_voltage) &
-            (df['current'] >= self.config.min_current) &
-            (df['power'] >= self.config.min_power) &
-            (df['temperature'] >= self.config.min_temperature) &
-            (df['temperature'] <= self.config.max_temperature)
+            (df['lux'] >= 0.0) & (df['lux'] <= 120000.0) &
+            (df['voltage'] >= 0.0) & (df['voltage'] <= 25.0) &
+            (df['current'] >= 0.0) & (df['current'] <= 5.0) &
+            (df['power'] >= 0.0) & (df['power'] <= 50.0) &
+            (df['temperature'] >= 0.0) & (df['temperature'] <= 60.0) &
+            (df['humidity'] >= 0.0) & (df['humidity'] <= 100.0) &
+            (df['servo_angle'] >= 0.0) & (df['servo_angle'] <= 180.0)
         )
         
         df = df[valid_mask].copy()
@@ -374,6 +380,20 @@ class DataCleaner:
         
         if dropped > 0:
             self.logger.debug(f"Removed {dropped} readings with invalid ranges")
+        
+        return df
+        
+    def _handle_optional_fields(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Safely handle optional LDR columns"""
+        if 'ldr_left' not in df.columns:
+            df['ldr_left'] = 0
+            
+        if 'ldr_right' not in df.columns:
+            df['ldr_right'] = 0
+            
+        # Fill any missing LDR values with 0
+        df['ldr_left'] = df['ldr_left'].fillna(0).astype(int)
+        df['ldr_right'] = df['ldr_right'].fillna(0).astype(int)
         
         return df
 
@@ -432,8 +452,8 @@ class FeatureEngineer:
         """Create binary indicator features"""
         self.logger.debug("Adding binary features...")
         
-        # Fan status: on=1, off=0
-        df['fan_on'] = (df['fan_status'] == 'on').astype(int)
+        # Fan status: ON=1, OFF=0
+        df['fan_on'] = (df['fan_status'] == 'ON').astype(int)
         
         return df
     
@@ -586,23 +606,19 @@ class DatasetExporter:
             'timestamp',
             'hour', 'minute', 'day_of_week',
             'servo_angle', 'temperature', 'humidity',
-            'lux', 'voltage', 'current', 'power',
-            'fan_on'
+            'lux', 'ldr_left', 'ldr_right', 
+            'voltage', 'current', 'power',
+            'fan_on', 'power_diff', 'lux_diff',
+            'rolling_mean_power_5', 'rolling_mean_lux_5',
+            'target_power_t_plus_15'
         ]
         
-        # Add optional features if they exist
-        optional_columns = [
-            'power_diff', 'lux_diff',
-            'rolling_mean_power_5', 'rolling_mean_lux_5'
-        ]
-        
-        for col in optional_columns:
-            if col in df.columns:
-                final_columns.append(col)
-        
-        # Add target column
-        final_columns.append('target_power_t_plus_15')
-        
+        # Verify all required columns exist, drop missing ones gracefully or log error
+        missing_cols = [c for c in final_columns if c not in df.columns]
+        if missing_cols:
+            self.logger.error(f"Missing expected columns in final dataset: {missing_cols}")
+            final_columns = [c for c in final_columns if c in df.columns]
+            
         # Select columns
         df_export = df[final_columns].copy()
         
@@ -703,21 +719,23 @@ class ReportGenerator:
         temperature_stats = self._compute_stats(df_labeled, 'temperature')
         
         report = DataQualityReport(
-            rows_fetched=rows_fetched,
+            rows_before_cleaning=rows_fetched,
             rows_after_cleaning=rows_after_cleaning,
+            rows_after_feature_engineering=rows_after_cleaning, # Same as after cleaning unless feature engineering drops rows
             rows_after_labeling=rows_after_labeling,
-            rows_dropped_status=cleaner_stats['rows_dropped_status'],
-            rows_dropped_duplicates=cleaner_stats['rows_dropped_duplicates'],
-            rows_dropped_invalid_ranges=cleaner_stats['rows_dropped_invalid_ranges'],
-            rows_dropped_no_label=rows_after_cleaning - rows_after_labeling,
+            missing_values_per_column=missing_values,
             timestamp_min=timestamp_min,
             timestamp_max=timestamp_max,
-            missing_values=missing_values,
-            power_stats=power_stats,
-            lux_stats=lux_stats,
-            temperature_stats=temperature_stats,
-            label_match_failures=match_failures,
-            total_timespan_hours=round(timespan_hours, 2)
+            power_mean=power_stats.get('mean', 0.0),
+            power_min=power_stats.get('min', 0.0),
+            power_max=power_stats.get('max', 0.0),
+            lux_mean=lux_stats.get('mean', 0.0),
+            lux_min=lux_stats.get('min', 0.0),
+            lux_max=lux_stats.get('max', 0.0),
+            temperature_mean=temperature_stats.get('mean', 0.0),
+            temperature_min=temperature_stats.get('min', 0.0),
+            temperature_max=temperature_stats.get('max', 0.0),
+            label_match_fail_count=match_failures
         )
         
         self.logger.info("✓ Report generated")
@@ -770,30 +788,19 @@ class ReportGenerator:
         print("\n" + "=" * 70)
         print("DATA QUALITY REPORT SUMMARY")
         print("=" * 70)
-        print(f"Rows fetched:           {report.rows_fetched:,}")
+        print(f"Rows before cleaning:   {report.rows_before_cleaning:,}")
         print(f"Rows after cleaning:    {report.rows_after_cleaning:,}")
         print(f"Rows after labeling:    {report.rows_after_labeling:,}")
-        print(f"Total timespan:         {report.total_timespan_hours:.2f} hours")
         print()
-        print("Rows Dropped:")
-        print(f"  - Status filter:      {report.rows_dropped_status:,}")
-        print(f"  - Duplicates:         {report.rows_dropped_duplicates:,}")
-        print(f"  - Invalid ranges:     {report.rows_dropped_invalid_ranges:,}")
-        print(f"  - No future label:    {report.rows_dropped_no_label:,}")
-        print()
+        print(f"Label match failures:   {report.label_match_fail_count:,} rows")
         print(f"Timestamp range:        {report.timestamp_min} to {report.timestamp_max}")
         print()
-        print("Power Statistics:")
-        for k, v in report.power_stats.items():
-            print(f"  {k:8s}: {v:8.3f}")
-        print()
+        print("Power (W) Statistics:")
+        print(f"  Mean: {report.power_mean:.3f} | Min: {report.power_min:.3f} | Max: {report.power_max:.3f}")
         print("Lux Statistics:")
-        for k, v in report.lux_stats.items():
-            print(f"  {k:8s}: {v:8.1f}")
-        print()
-        print("Temperature Statistics:")
-        for k, v in report.temperature_stats.items():
-            print(f"  {k:8s}: {v:8.1f} °C")
+        print(f"  Mean: {report.lux_mean:.1f} | Min: {report.lux_min:.1f} | Max: {report.lux_max:.1f}")
+        print("Temperature (°C) Statistics:")
+        print(f"  Mean: {report.temperature_mean:.1f} | Min: {report.temperature_min:.1f} | Max: {report.temperature_max:.1f}")
         print("=" * 70)
 
 

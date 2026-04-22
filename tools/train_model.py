@@ -42,7 +42,8 @@ import joblib
 
 FEATURE_COLUMNS = [
     'hour', 'minute', 'day_of_week',
-    'servo_angle', 'temperature', 'humidity', 'lux',
+    'servo_angle', 'temperature', 'humidity',
+    'lux', 'ldr_left', 'ldr_right', 
     'voltage', 'current', 'power',
     'fan_on', 'power_diff', 'lux_diff',
     'rolling_mean_power_5', 'rolling_mean_lux_5'

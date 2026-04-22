@@ -36,7 +36,7 @@ export default function Overview() {
   const sparkTemp = hData.slice(-20).map((d) => d.temperature);
   const sparkHumidity = hData.slice(-20).map((d) => d.humidity);
 
-  const fanIsOn = r.fan_status === "on" || r.fan_status === "ON" || r.fan_status === true;
+  const fanIsOn = r.fan_status === "ON";
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">

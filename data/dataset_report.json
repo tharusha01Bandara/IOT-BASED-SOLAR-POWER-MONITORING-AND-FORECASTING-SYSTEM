@@ -1,0 +1,28 @@
+{
+  "rows_before_cleaning": 4691,
+  "rows_after_cleaning": 2196,
+  "rows_after_feature_engineering": 2196,
+  "rows_after_labeling": 2168,
+  "missing_values_per_column": {
+    "device_timestamp": 2168
+  },
+  "timestamp_min": "2026-04-13T18:30:00+05:30",
+  "timestamp_max": "2026-04-21T11:15:00+05:30",
+  "power_mean": 0.319,
+  "power_min": 0.0,
+  "power_max": 1.4,
+  "lux_mean": 16139.252,
+  "lux_min": 0.0,
+  "lux_max": 66206.0,
+  "temperature_mean": 28.542,
+  "temperature_min": 25.0,
+  "temperature_max": 35.4,
+  "label_match_fail_count": 28,
+  "generated_at": "2026-04-21T19:46:20.257100+05:30",
+  "config": {
+    "device_id": "tracker01",
+    "days": 7,
+    "horizon_minutes": 15,
+    "tolerance_seconds": 30
+  }
+}

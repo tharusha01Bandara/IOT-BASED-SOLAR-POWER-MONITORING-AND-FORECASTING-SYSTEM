@@ -35,8 +35,8 @@ export default function Control() {
             </div>
             <div className="flex justify-between p-2 rounded-lg bg-muted/50">
               <span className="text-muted-foreground">Fan status</span>
-              <span className={`font-mono font-medium ${currentReading.fan_status ? "text-warning" : "text-success"}`}>
-                {currentReading.fan_status ? "ON" : "OFF"}
+              <span className={`font-mono font-medium ${currentReading.fan_status === "ON" ? "text-warning" : "text-success"}`}>
+                {currentReading.fan_status === "ON" ? "ON" : "OFF"}
               </span>
             </div>
           </div>

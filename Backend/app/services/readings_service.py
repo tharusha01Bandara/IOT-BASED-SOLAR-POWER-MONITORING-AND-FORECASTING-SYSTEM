@@ -110,45 +110,36 @@ class ReadingsService:
     async def get_reading_history(
         self,
         device_id: str,
-        limit: int = 50,
-        max_limit: int = 1000
+        minutes: int = 60
     ) -> List[Dict[str, Any]]:
         """
-        Retrieve historical readings limited to N most recent, sorted ascending.
+        Retrieve historical readings for a given time window, sorted ascending.
         
         Args:
             device_id: Unique identifier of the device
-            limit: Number of recent readings to fetch (default: 50)
-            max_limit: Maximum allowed limit to prevent excessive queries
+            minutes: Time window in minutes (default: 60)
 
         Returns:
             List of reading dictionaries sorted by timestamp ascending
         """
         try:
-            # Validate limit
-            if limit <= 0:
-                logger.warning(f"Invalid limit value: {limit}, using default 50")
-                limit = 50
-                
-            if limit > max_limit:
-                logger.warning(
-                    f"Requested limit ({limit}) exceeds maximum ({max_limit}), "
-                    f"using maximum"
-                )
-                limit = max_limit
+            # Calculate the time threshold
+            time_threshold = datetime.utcnow() - timedelta(minutes=minutes)
 
-            # Query for the last N readings (recent first)
+            # Query for readings within the time window
             cursor = self.collection.find(
-                {"device_id": device_id},
-                sort=[("timestamp", -1)]
-            ).limit(limit)
+                {
+                    "device_id": device_id,
+                    "timestamp": {"$gte": time_threshold}
+                },
+                sort=[("timestamp", 1)]  # 1 for ascending
+            )
 
-            # Convert cursor to list, process with history_helper, and reverse for ascending order
+            # Convert cursor to list and process with history_helper
             readings = [history_helper(reading) for reading in cursor]
-            readings.reverse()
 
             logger.info(
-                f"Retrieved {len(readings)} history records for device {device_id}"
+                f"Retrieved {len(readings)} history records for device {device_id} over the last {minutes} minutes"
             )
 
             return readings
@@ -188,9 +179,10 @@ class ReadingsService:
                         "count": {"$sum": 1},
                         "avg_power": {"$avg": "$power"},
                         "max_power": {"$max": "$power"},
-                        "min_power": {"$min": "$power"},
                         "avg_temperature": {"$avg": "$temperature"},
-                        "avg_lux": {"$avg": "$lux"}
+                        "avg_humidity": {"$avg": "$humidity"},
+                        "avg_lux": {"$avg": "$lux"},
+                        "avg_servo_angle": {"$avg": "$servo_angle"}
                     }
                 }
             ]
@@ -203,17 +195,24 @@ class ReadingsService:
                     "device_id": device_id,
                     "time_window_minutes": minutes,
                     "reading_count": stats.get("count", 0),
-                    "average_power": round(stats.get("avg_power", 0), 2),
-                    "max_power": round(stats.get("max_power", 0), 2),
-                    "min_power": round(stats.get("min_power", 0), 2),
-                    "average_temperature": round(stats.get("avg_temperature", 0), 2),
-                    "average_lux": round(stats.get("avg_lux", 0), 2)
+                    "avg_power": round(stats.get("avg_power") or 0, 2),
+                    "max_power": round(stats.get("max_power") or 0, 2),
+                    "avg_temperature": round(stats.get("avg_temperature") or 0, 2),
+                    "avg_humidity": round(stats.get("avg_humidity") or 0, 2),
+                    "avg_lux": round(stats.get("avg_lux") or 0, 2),
+                    "avg_servo_angle": round(stats.get("avg_servo_angle") or 0, 2)
                 }
             
             return {
                 "device_id": device_id,
                 "time_window_minutes": minutes,
                 "reading_count": 0,
+                "avg_power": 0.0,
+                "max_power": 0.0,
+                "avg_temperature": 0.0,
+                "avg_humidity": 0.0,
+                "avg_lux": 0.0,
+                "avg_servo_angle": 0.0,
                 "message": "No data available for the specified time period"
             }
             

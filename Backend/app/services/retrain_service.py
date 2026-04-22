@@ -168,7 +168,7 @@ class ModelRetrainService:
             # Binary features
             df['fan_on'] = 0
             if 'fan_status' in df.columns:
-                df['fan_on'] = (df['fan_status'] == 'on').astype(int)
+                df['fan_on'] = df['fan_status'].astype(str).str.upper().eq('ON').astype(int)
             
             return df
             

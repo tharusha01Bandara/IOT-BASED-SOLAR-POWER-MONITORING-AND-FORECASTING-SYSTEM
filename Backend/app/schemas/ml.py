@@ -101,6 +101,7 @@ class MLPredictRequest(BaseModel):
     voltage: float = Field(..., ge=0.0)
     current: float = Field(..., ge=0.0)
     power: float = Field(..., ge=0.0)
+    fan_status: Optional[str] = Field("OFF", description="Fan status (ON/OFF)")
     store_prediction: bool = Field(
         default=False,
         description="Whether to store prediction in database"
@@ -118,6 +119,7 @@ class MLPredictRequest(BaseModel):
                 "voltage": 18.5,
                 "current": 2.3,
                 "power": 42.55,
+                "fan_status": "ON",
                 "store_prediction": False
             }
         },

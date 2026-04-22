@@ -1,0 +1,61 @@
+{
+  "model_type": "RandomForest",
+  "version": "20260421_194703",
+  "trained_at": "2026-04-21T19:47:03.589860",
+  "features": [
+    "hour",
+    "minute",
+    "day_of_week",
+    "servo_angle",
+    "temperature",
+    "humidity",
+    "lux",
+    "ldr_left",
+    "ldr_right",
+    "voltage",
+    "current",
+    "power",
+    "fan_on",
+    "power_diff",
+    "lux_diff",
+    "rolling_mean_power_5",
+    "rolling_mean_lux_5"
+  ],
+  "target": "target_power_t_plus_15",
+  "metrics": {
+    "train": {
+      "mae": 0.045665848289835984,
+      "rmse": 0.09166163417744645,
+      "r2": 0.9513859266919685,
+      "mape": 551517917185842.0
+    },
+    "test": {
+      "mae": 0.057007276164931196,
+      "rmse": 0.11973809047373002,
+      "r2": 0.9093390804451381,
+      "mape": 384024094780242.06
+    }
+  },
+  "feature_importance": {
+    "lux": 0.21629694988032278,
+    "ldr_right": 0.17498866538552116,
+    "ldr_left": 0.14553334574592056,
+    "power": 0.08894913462285077,
+    "humidity": 0.0885604194858272,
+    "current": 0.07416999400523486,
+    "rolling_mean_lux_5": 0.0720770295811296,
+    "rolling_mean_power_5": 0.06641099626397114,
+    "temperature": 0.023567858922466902,
+    "voltage": 0.013539179615202812
+  },
+  "model_params": {
+    "n_estimators": 100,
+    "max_depth": 15,
+    "min_samples_split": 10,
+    "min_samples_leaf": 4,
+    "max_features": "sqrt",
+    "random_state": 42,
+    "n_jobs": -1,
+    "verbose": 0
+  }
+}

@@ -286,22 +286,22 @@ async def get_reading_history(
         max_length=50,
         example="tracker01"
     ),
-    limit: int = Query(
-        default=50,
-        description="Number of recent records to return",
+    minutes: int = Query(
+        default=60,
+        description="Time window in minutes to fetch history for",
         ge=1,
-        le=1000,
-        example=50
+        le=10080,
+        example=60
     )
 ) -> List[HistoryResponse]:
     """
-    Get historical sensor readings limited to N recent records.
+    Get historical sensor readings for a given time window.
 
     Returns readings sorted by timestamp in ascending order (oldest first).
 
     Args:
         device_id: Unique device identifier
-        limit: Number of records to return (default: 50, max: 1000)
+        minutes: Time window in minutes (default: 60)
         service: Readings service instance (injected)
         settings: Application settings (injected)
 
@@ -315,13 +315,13 @@ async def get_reading_history(
         # Retrieve reading history
         readings = await service.get_reading_history(
             device_id=device_id,
-            limit=limit,
-            max_limit=1000
+            minutes=minutes
         )
 
         # Convert to response models
         return [HistoryResponse(**reading) for reading in readings]
-        logger.error(f"Database error while retrieving reading history: {e}")
+        
+    except PyMongoError as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={

@@ -42,10 +42,20 @@ class MLService:
     METADATA_FILE = "model_meta.json"
     
     # Feature configuration
-    BASE_FEATURES = ["servo_angle", "temperature", "humidity", "lux", "voltage", "current", "power"]
+    BASE_FEATURES = ["servo_angle", "temperature", "humidity", "lux", "ldr_left", "ldr_right", "voltage", "current", "power"]
     TIME_FEATURES = ["hour", "minute", "day_of_week"]
     TREND_FEATURES = ["power_diff", "lux_diff", "rolling_mean_power_5", "rolling_mean_lux_5"]
     BINARY_FEATURES = ["fan_on"]
+
+    # This defines the exact order for inference (Must match train_model.py)
+    INFERENCE_FEATURES = [
+        'hour', 'minute', 'day_of_week',
+        'servo_angle', 'temperature', 'humidity',
+        'lux', 'ldr_left', 'ldr_right', 
+        'voltage', 'current', 'power',
+        'fan_on', 'power_diff', 'lux_diff',
+        'rolling_mean_power_5', 'rolling_mean_lux_5'
+    ]
     
     def __init__(self, collection: Collection):
         """
@@ -139,7 +149,16 @@ class MLService:
             df['rolling_mean_lux_5'] = df['lux'].rolling(window=5, min_periods=1).mean()
             
             # Binary features
-            df['fan_on'] = (df.get('fan_status', 0) == 1).astype(int) if 'fan_status' in df.columns else 0
+            df['fan_on'] = (df['fan_status'].astype(str).str.upper() == 'ON').astype(int) if 'fan_status' in df.columns else 0
+            
+            # Fill default values for optional LDR fields if missing
+            if 'ldr_left' not in df.columns:
+                df['ldr_left'] = 0
+            if 'ldr_right' not in df.columns:
+                df['ldr_right'] = 0
+
+            df['ldr_left'] = df['ldr_left'].fillna(0).astype(int)
+            df['ldr_right'] = df['ldr_right'].fillna(0).astype(int)
             
             logger.info(f"Engineered features: time={len(self.TIME_FEATURES)}, trend={len(self.TREND_FEATURES)}")
             
@@ -210,8 +229,7 @@ class MLService:
                 raise ValueError("No valid samples after creating supervised dataset")
             
             # Select features
-            feature_cols = self.BASE_FEATURES + self.TIME_FEATURES + self.TREND_FEATURES + self.BINARY_FEATURES
-            available_features = [f for f in feature_cols if f in df_clean.columns]
+            available_features = [f for f in self.INFERENCE_FEATURES if f in df_clean.columns]
             
             X = df_clean[available_features]
             y = df_clean['target_power_15min']
@@ -445,6 +463,10 @@ class MLService:
             # Base features
             for feat in self.BASE_FEATURES:
                 features[feat] = reading.get(feat, 0.0)
+            
+            # Ensure LDRs exist even if missing from reading
+            features['ldr_left'] = reading.get('ldr_left', 0)
+            features['ldr_right'] = reading.get('ldr_right', 0)
             
             # Time features
             features['hour'] = timestamp.hour

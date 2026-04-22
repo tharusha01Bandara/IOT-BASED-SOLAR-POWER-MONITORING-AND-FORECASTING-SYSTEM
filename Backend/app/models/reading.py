@@ -41,42 +41,59 @@ def serialize_datetime(dt: Any) -> Optional[str]:
     return str(dt)
 
 
+def serialize_mongo_doc(doc: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Reusable helper function to serialize MongoDB documents.
+    Converts ObjectId to string and datetime to ISO format string.
+    """
+    if not doc:
+        return {}
+    
+    serialized = {}
+    for key, value in doc.items():
+        if key == "_id":
+            serialized["id"] = str(value)
+        elif isinstance(value, ObjectId):
+            serialized[key] = str(value)
+        elif isinstance(value, datetime):
+            serialized[key] = serialize_datetime(value)
+        else:
+            serialized[key] = value
+    return serialized
+
+
 def reading_helper(reading: Dict[str, Any]) -> Dict[str, Any]:
     """
     Convert MongoDB reading document to JSON-serializable dictionary.
-
-    Args:
-        reading: MongoDB document from readings_raw collection
-
-    Returns:
-        Dict with converted ObjectId and datetime fields
     """
     if not reading:
         return {}
 
+    # Base serialization for id and timestamp
+    doc = serialize_mongo_doc(reading)
     return {
-        "id": str(reading["_id"]) if "_id" in reading else None,
-        "device_id": reading.get("device_id"),
-        "timestamp": serialize_datetime(reading.get("timestamp")),
-        "device_timestamp": reading.get("device_timestamp"),
-        "servo_angle": reading.get("servo_angle"),
-        "temperature": reading.get("temperature"),
-        "humidity": reading.get("humidity"),
-        "lux": reading.get("lux"),
-        "ldr_left": reading.get("ldr_left"),
-        "ldr_right": reading.get("ldr_right"),
-        "voltage": reading.get("voltage"),
-        "current": reading.get("current"),
-        "power": reading.get("power"),
-        "fan_status": reading.get("fan_status"),
-        "status": reading.get("status"),
+        "id": doc.get("id"),
+        "device_id": doc.get("device_id"),
+        "timestamp": doc.get("timestamp"),
+        "device_timestamp": doc.get("device_timestamp"),
+        "servo_angle": doc.get("servo_angle"),
+        "temperature": doc.get("temperature"),
+        "humidity": doc.get("humidity"),
+        "lux": doc.get("lux"),
+        "ldr_left": doc.get("ldr_left"),
+        "ldr_right": doc.get("ldr_right"),
+        "voltage": doc.get("voltage"),
+        "current": doc.get("current"),
+        "power": doc.get("power"),
+        "fan_status": doc.get("fan_status"),
+        "status": doc.get("status"),
     }
 
 
 def history_helper(reading: Dict[str, Any]) -> Dict[str, Any]:
     """
     Convert MongoDB document to a lightweight format for charts.
-    Includes only essential fields and formatted datetime as ISO string.
+    Includes core telemetry and formatted datetime as ISO string.
     """
     if not reading:
         return {}
@@ -90,6 +107,10 @@ def history_helper(reading: Dict[str, Any]) -> Dict[str, Any]:
         "humidity": reading.get("humidity"),
         "lux": reading.get("lux"),
         "servo_angle": reading.get("servo_angle"),
+        "ldr_left": reading.get("ldr_left"),
+        "ldr_right": reading.get("ldr_right"),
+        "fan_status": reading.get("fan_status"),
+        "status": reading.get("status"),
     }
 
 

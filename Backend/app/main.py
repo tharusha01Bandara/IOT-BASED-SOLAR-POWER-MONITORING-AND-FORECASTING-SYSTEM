@@ -16,7 +16,7 @@ import logging
 from app.core.config import get_settings
 from app.core.logging import setup_logging, get_logger
 from app.db.mongodb import mongodb_client
-from app.routers import readings, predictions, health, ml, ml_management, chat
+from app.routers import readings, predictions, health, ml, ml_management, chat_router
 
 # Get application settings
 settings = get_settings()
@@ -181,7 +181,7 @@ app.include_router(
 )
 
 app.include_router(
-    chat.router,
+    chat_router.router,
     prefix=settings.api_v1_prefix
 )
 

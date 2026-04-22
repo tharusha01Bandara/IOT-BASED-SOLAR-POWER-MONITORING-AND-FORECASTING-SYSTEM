@@ -67,6 +67,11 @@ class Settings(BaseSettings):
     llm_temperature: float = Field(default=0.2, alias="LLM_TEMPERATURE")
     llm_max_tokens: int = Field(default=500, alias="LLM_MAX_TOKENS")
     llm_timeout_seconds: int = Field(default=20, alias="LLM_TIMEOUT_SECONDS")
+    
+    # Gemini Configuration
+    gemini_api_key: str = Field(default="", alias="GEMINI_API_KEY")
+    gemini_model: str = Field(default="gemini-2.5-flash", alias="GEMINI_MODEL")
+    chat_fallback_enabled: bool = Field(default=True, alias="CHAT_FALLBACK_ENABLED")
 
     # Validate log level
     @validator("log_level")

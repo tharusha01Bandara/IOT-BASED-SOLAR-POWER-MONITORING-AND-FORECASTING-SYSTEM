@@ -17,7 +17,7 @@ const navItems = [
   { title: "Analytics", url: "/analytics", icon: BarChart3 },
   { title: "Control & Events", url: "/control", icon: Settings2 },
   { title: "Model & Health", url: "/model", icon: Brain },
-  { title: "AI Chat", url: "/chat", icon: MessageSquare },
+  
 ];
 
 export function AppSidebar() {
@@ -61,3 +61,4 @@ export function AppSidebar() {
     </Sidebar>
   );
 }
+// { title: "AI Chat", url: "/chat", icon: MessageSquare },
